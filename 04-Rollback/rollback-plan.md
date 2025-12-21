@@ -57,6 +57,7 @@ Rollback does NOT affect:
 Set:
 ```json
 "dry_run": true
+```
 
 2) Restart the monitor process/service
 
