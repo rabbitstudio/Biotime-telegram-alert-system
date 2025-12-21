@@ -1,5 +1,5 @@
 {
-  "dry_run": false,
+  "dry_run": true,
   "poll_interval_seconds": 2,
   "csv_path": "\\\\FILE-SRV\\\\Biotime\\\\Export\\\\Telegram report.csv",
   "admin": {
