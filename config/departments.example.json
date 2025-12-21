@@ -1,0 +1,20 @@
+{
+  "poll_interval_seconds": 2,
+  "csv_path": "\\\\FILE-SRV\\\\Biotime\\\\Export\\\\Telegram report.csv",
+  "admin": {
+    "telegram_bot_token": "REPLACE_ME",
+    "chat_id": "REPLACE_ME"
+  },
+  "departments": [
+    {
+      "name": "IT",
+      "telegram_bot_token": "REPLACE_ME",
+      "chat_id": "REPLACE_ME"
+    },
+    {
+      "name": "HR",
+      "telegram_bot_token": "REPLACE_ME",
+      "chat_id": "REPLACE_ME"
+    }
+  ]
+}
