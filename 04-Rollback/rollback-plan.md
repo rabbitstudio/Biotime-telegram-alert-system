@@ -65,4 +65,20 @@ Set:
 - Logs show DRY RUN=True
 - App logs [DRY RUN] Would notify ... instead of sending Telegram
 
+## Rollback Option C — Revert to Previous Known-Good Version
 
+### Goal: Restore behavior to last stable commit/tag.
+
+1) Identify a previous stable commit or release tag
+Example:
+- git log --oneline --max-count=20
+
+2) Checkout the stable version
+- git checkout <stable_commit_or_tag>
+
+3) Reinstall dependencies if needed
+- pip install -r requirements.txt
+
+4) Restart the monitor
+
+5) Validate using 03-Test/test-cases.md basic tests
