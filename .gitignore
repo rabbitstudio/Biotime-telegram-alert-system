@@ -1,0 +1,49 @@
+# =========================
+# Python
+# =========================
+__pycache__/
+*.py[cod]
+*.pyd
+*.so
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.mypy_cache/
+
+# Virtual env
+.venv/
+venv/
+env/
+
+# =========================
+# OS junk
+# =========================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# =========================
+# IDE/editor
+# =========================
+.vscode/
+.idea/
+*.swp
+
+# =========================
+# Project-specific (IMPORTANT)
+# =========================
+logs/
+*.log
+
+# Secrets / env files (อย่าให้หลุดขึ้น repo)
+.env
+.env.*
+*.env
+
+# Local runtime/config that may contain tokens/chat ids
+config/*.json
+!config/*.example.json
+
+# Common generated artifacts
+backup_messages.csv
