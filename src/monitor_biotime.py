@@ -7,6 +7,7 @@ from typing import Any, Dict, Optional, Tuple
 import pandas as pd
 
 from utils.logger import setup_logger
+from utils.telegram import send_telegram_message
 
 CONFIG_PATH = os.path.join("config", "departments.json")
 CONFIG_EXAMPLE_PATH = os.path.join("config", "departments.example.json")
@@ -16,7 +17,6 @@ logger = setup_logger()
 
 
 def load_config() -> Optional[Dict[str, Any]]:
-    """Load runtime config from config/departments.json (NOT committed)."""
     if os.path.exists(CONFIG_PATH):
         with open(CONFIG_PATH, "r", encoding="utf-8") as f:
             return json.load(f)
@@ -29,10 +29,6 @@ def load_config() -> Optional[Dict[str, Any]]:
 
 
 def read_csv_with_fallback(path: str) -> Tuple[Optional[pd.DataFrame], Optional[str]]:
-    """
-    Read CSV with encoding fallback (common on Windows/Thai exports).
-    Returns (df, encoding_used) or (None, None) on failure.
-    """
     encodings = ["utf-8-sig", "utf-8", "cp874", "tis-620", "latin1"]
     last_err = None
 
@@ -73,7 +69,6 @@ def save_state(state_path: str, state: Dict[str, Any]) -> None:
 
 
 def pick_department(row: Dict[str, str], dept_col: str) -> str:
-    # Try configured column first, then some common fallbacks
     candidates = [dept_col, "Department", "DEPARTMENT", "dept", "Dept"]
     for c in candidates:
         v = (row.get(c) or "").strip()
@@ -83,8 +78,7 @@ def pick_department(row: Dict[str, str], dept_col: str) -> str:
 
 
 def format_message(row: Dict[str, str], dept: str) -> str:
-    # Keep it simple & robust: show a few non-empty fields
-    lines = [f"🏢 Dept: {dept}"]
+    lines = [f"📣 BioTime Alert", f"🏢 Dept: {dept}"]
     shown = 0
     for k, v in row.items():
         if not v:
@@ -98,6 +92,30 @@ def format_message(row: Dict[str, str], dept: str) -> str:
     return "\n".join(lines)
 
 
+def build_dept_map(cfg: Dict[str, Any]) -> Dict[str, Dict[str, str]]:
+    """
+    Returns dict: dept_name -> {"telegram_bot_token": "...", "chat_id": "..."}
+    """
+    dept_map: Dict[str, Dict[str, str]] = {}
+    for d in cfg.get("departments", []):
+        name = (d.get("name") or "").strip()
+        if not name:
+            continue
+        dept_map[name] = {
+            "telegram_bot_token": (d.get("telegram_bot_token") or "").strip(),
+            "chat_id": str(d.get("chat_id") or "").strip(),
+        }
+    return dept_map
+
+
+def get_admin_target(cfg: Dict[str, Any]) -> Dict[str, str]:
+    admin = cfg.get("admin", {}) or {}
+    return {
+        "telegram_bot_token": (admin.get("telegram_bot_token") or "").strip(),
+        "chat_id": str(admin.get("chat_id") or "").strip(),
+    }
+
+
 def main():
     cfg = load_config()
     if not cfg:
@@ -109,11 +127,14 @@ def main():
     dry_run = bool(cfg.get("dry_run", True))
     state_path = cfg.get("state_path", STATE_PATH_DEFAULT)
 
+    dept_map = build_dept_map(cfg)
+    admin_target = get_admin_target(cfg)
+
     logger.info("=== BioTime Telegram Alert System (DRY RUN=%s) ===", dry_run)
     logger.info("Start time: %s", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
     logger.info("CSV Path: %s", csv_path)
     logger.info("Poll Interval (seconds): %s", poll_interval)
-    logger.info("State Path: %s", state_path)
+    logger.info("Departments configured: %s", list(dept_map.keys()))
 
     if not csv_path:
         logger.error("csv_path is missing in config.")
@@ -164,12 +185,26 @@ def main():
                     dept = pick_department(row_dict, dept_col)
                     msg = format_message(row_dict, dept)
 
+                    target = dept_map.get(dept)
+                    if not target:
+                        logger.warning("No target config for dept=%s. Skipping send.", dept)
+                        logger.info("[DRY RUN] Message would be:\n%s", msg)
+                        continue
+
                     if dry_run:
                         logger.info("[DRY RUN] Would notify dept=%s\n%s", dept, msg)
                     else:
-                        # We will implement real Telegram sending in the next step
-                        logger.info("[TODO] Telegram send not enabled yet. dept=%s", dept)
+                        try:
+                            mid = send_telegram_message(
+                                bot_token=target["telegram_bot_token"],
+                                chat_id=target["chat_id"],
+                                text=msg,
+                            )
+                            logger.info("✅ Sent Telegram to dept=%s message_id=%s", dept, mid)
+                        except Exception as e:
+                            logger.error("❌ Telegram send failed dept=%s error=%s", dept, e)
 
+                # Update state after processing new rows
                 last_row_count = row_count
                 state["last_row_count"] = last_row_count
                 save_state(state_path, state)
