@@ -71,13 +71,19 @@ Set:
 
 1) Identify a previous stable commit or release tag
 Example:
-- git log --oneline --max-count=20
+```json
+ git log --oneline --max-count=20
+```
 
 2) Checkout the stable version
-- git checkout <stable_commit_or_tag>
+```json
+git checkout <stable_commit_or_tag>
+```
 
 3) Reinstall dependencies if needed
-- pip install -r requirements.txt
+```json
+pip install -r requirements.txt
+```
 
 4) Restart the monitor
 
