@@ -20,12 +20,12 @@ BioTime → CSV Export (shared folder) → Python Monitor → Telegram Bot API �
 pip install -r requirements.txt
 python src/monitor_biotime.py
 ```
-## Config required
+### Config required
 - Create config/departments.json on your runtime machine (NOT committed)
 - Copy structure from config/departments.example.json
 - Keep "dry_run": true during testing
 
-## Simulate new events locally
+### Simulate new events locally
 - Append a new row to your CSV and watch logs for New rows detected
 
 ## Why this matters (business value)
