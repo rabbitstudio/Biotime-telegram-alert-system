@@ -13,7 +13,7 @@ Designed for **on-premise** environments where HR/IT need instant visibility wit
 ## High-level flow
 BioTime → CSV Export (shared folder) → Python Monitor → Telegram Bot API → Dept Chat Rooms
 
-## Quick start (safe demo / DRY RUN)
+### Quick start (safe demo / DRY RUN)
 > This repo is public. Use sample data + DRY RUN first.
 
 ```bash
@@ -45,7 +45,7 @@ python src/monitor_biotime.py
 - Rotate tokens immediately if exposure is suspected.
 
 ## Repository structure
-```
+```text
 00-Overview.md
 01-Design/
 02-Implementation/
