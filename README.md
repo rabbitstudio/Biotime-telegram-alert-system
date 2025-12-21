@@ -19,47 +19,42 @@ BioTime → CSV Export (shared folder) → Python Monitor → Telegram Bot API �
 ```bash
 pip install -r requirements.txt
 python src/monitor_biotime.py
+```
+Config required
+Create config/departments.json on your runtime machine (NOT committed)
 
-## Config required
+Copy structure from config/departments.example.json
 
-- Create config/departments.json on your runtime machine (NOT committed)
+Keep "dry_run": true during testing
 
-- Copy structure from config/departments.example.json
+Simulate new events locally
+Append a new row to your CSV and watch logs for New rows detected
 
-- Keep "dry_run": true during testing
+Why this matters (business value)
+Reduces manual attendance checking for HR/Operations
 
-## Simulate new events locally
+Improves response time (late/absent patterns)
 
-- Append a new row to your CSV and watch logs for New rows detected
+Adds a lightweight audit trail without modifying BioTime
 
-## Why this matters (business value)
+Tech stack
+Python 3.x
 
-- Reduces manual attendance checking for HR/Operations
+pandas, requests
 
-- Improves response time (late/absent patterns)
+Telegram Bot API
 
-- Adds a lightweight audit trail without modifying BioTime
+Windows Server / On-Prem file share (SMB)
 
-## Tech stack
+Security notes (important)
+Never commit real Bot Tokens / Chat IDs to this repo.
 
-- Python 3.x
+Use placeholders in examples and keep real secrets in config/departments.json or .env (server-only).
 
-- pandas, requests
+Rotate tokens immediately if exposure is suspected.
 
-- Telegram Bot API
-
-- Windows Server / On-Prem file share (SMB)
-
-## Security notes (important)
-
-- Never commit real Bot Tokens / Chat IDs to this repo.
-
-- Use placeholders in examples and keep real secrets in config/departments.json or .env (server-only).
-
-- Rotate tokens immediately if exposure is suspected.
-
-## Repository structure
-
+Repository structure
+```
 00-Overview.md
 01-Design/
 02-Implementation/
@@ -69,23 +64,17 @@ python src/monitor_biotime.py
 src/
 config/
 docs/
+```
+Documentation
+Design docs: 01-Design/
 
-## Documentation
+Implementation guides: 02-Implementation/
 
-- Design docs: 01-Design/
+Test cases & evidence: 03-Test/
 
-- Implementation guides: 02-Implementation/
+Rollback plan: 04-Rollback/
 
-- Test cases & evidence: 03-Test/
-
-- Rollback plan: 04-Rollback/
-
-- Portfolio PDF (recruiters): docs/portfolio.pdf
+Portfolio PDF (recruiters): docs/portfolio.pdf
 
 Author
-
 System & Network Engineer
-
-Rotate tokens immediately if exposure is suspected.
-
-Repository structure
