@@ -57,3 +57,11 @@ Rollback does NOT affect:
 Set:
 ```json
 "dry_run": true
+
+2) Restart the monitor process/service
+
+3) Validate
+- Logs show DRY RUN=True
+- App logs [DRY RUN] Would notify ... instead of sending Telegram
+
+
