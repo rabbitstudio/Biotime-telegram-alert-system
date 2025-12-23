@@ -41,24 +41,34 @@ flowchart LR
 
 ```mermaid
    flowchart TD
-  A([Start monitor]) --> B[Load config departments.json]
-  B --> C{Config found}
-  C -- No --> C1[Log missing config<br/>Exit]
-  C -- Yes --> D[Init logger and load last_seen state]
-  D --> E{CSV exists}
-  E -- No --> E1[Log CSV not found<br/>Sleep poll interval] --> E
-  E -- Yes --> F[Read CSV safely]
-  F --> G{New rows}
-  G -- No --> G1[Sleep poll interval] --> E
-  G -- Yes --> H[Parse new rows]
-  H --> I[For each row get Dept]
-  I --> J{Dept mapped}
-  J -- No --> J1[Log unknown dept<br/>Skip row] --> I
-  J -- Yes --> K{Dry run enabled}
-  K -- Yes --> K1[Log DRY RUN would notify dept] --> L[Update last_seen state]
-  K -- No --> K2[Send Telegram message to dept chat] --> L
-  L --> M[Write last_seen.json and logs]
-  M --> G1
+    A([Start monitor]) --> B[Load config: config/departments.json]
+    B --> C{Config found?}
+    C -- No --> C1[Log missing config<br/>Exit]
+    C -- Yes --> D[Load last_seen state (logs/last_seen.json)]
+
+    D --> E{CSV exists?}
+    E -- No --> E1[Log CSV not found<br/>Sleep poll interval] --> E
+    E -- Yes --> F[Read CSV (encoding fallback)]
+
+    F --> G{First run? (no last_row_count)}
+    G -- Yes --> G1[Initialize state = current row_count<br/>(avoid spamming old rows)] --> H[Sleep poll interval] --> E
+    G -- No --> I{row_count decreased?}
+    I -- Yes --> I1[CSV reset/rotated<br/>Update state to new row_count] --> H --> E
+    I -- No --> J{New rows appended?}
+    J -- No --> H --> E
+    J -- Yes --> K[Slice new rows (last_row_count → row_count)]
+
+    K --> L[For each new row: pick department]
+    L --> M{Dept mapped?}
+    M -- No --> M1[Log unknown dept<br/>Skip row] --> L
+    M -- Yes --> N{dry_run?}
+    N -- Yes --> N1[Log: Would notify dept<br/>Message preview] --> L
+    N -- No --> N2[Send Telegram] --> L
+
+    L --> O[Update last_row_count = row_count]
+    O --> P[Write last_seen.json + logs]
+    P --> H --> E
+
 ```
 
 ## 3) Sequence Diagram — “New row detected → Telegram notify”
@@ -91,33 +101,40 @@ flowchart LR
 ## 4) State Diagram — Runtime behavior (safe + ops-friendly)
 
 ```mermaid
-   stateDiagram-v2
-  [*] --> Starting
-  Starting --> LoadConfig
-  LoadConfig --> MissingConfig: config not found
-  MissingConfig --> [*]
+  stateDiagram-v2
+    [*] --> Starting
+    Starting --> LoadConfig
+    LoadConfig --> MissingConfig: config not found
+    MissingConfig --> [*]
 
-  LoadConfig --> WaitingForCSV
-  WaitingForCSV --> WaitingForCSV: CSV missing (sleep)
-  WaitingForCSV --> ReadingCSV: CSV found
+    LoadConfig --> WaitingForCSV
+    WaitingForCSV --> WaitingForCSV: CSV missing / sleep
+    WaitingForCSV --> ReadingCSV: CSV found
 
-  ReadingCSV --> NoChanges: no new rows
-  ReadingCSV --> Processing: new rows detected
-  NoChanges --> WaitingForCSV: sleep
+    ReadingCSV --> InitState: first run (no last_row_count)
+    InitState --> WaitingForCSV: sleep
 
-  Processing --> Routing
-  Routing --> SkipUnknownDept: dept not mapped
-  SkipUnknownDept --> Processing: next row
+    ReadingCSV --> ResetDetected: row_count decreased
+    ResetDetected --> WaitingForCSV: sleep
 
-  Routing --> DryRun: dry_run=true
-  Routing --> Sending: dry_run=false
+    ReadingCSV --> NoChanges: no new rows
+    NoChanges --> WaitingForCSV: sleep
 
-  DryRun --> PersistState
-  Sending --> PersistState: send ok
-  Sending --> ErrorBackoff: send failed
+    ReadingCSV --> Processing: new rows detected
+    Processing --> Routing
 
-  ErrorBackoff --> WaitingForCSV: sleep/backoff
-  PersistState --> WaitingForCSV: next loop
+    Routing --> SkipUnknownDept: dept not mapped
+    SkipUnknownDept --> Processing: next row
+
+    Routing --> DryRun: dry_run=true
+    DryRun --> PersistState
+
+    Routing --> Sending: dry_run=false
+    Sending --> PersistState: send ok
+    Sending --> PersistState: send failed (logged)
+
+    PersistState --> WaitingForCSV: next loop
+
 ```
 
 ## Notes (Sanitization)
