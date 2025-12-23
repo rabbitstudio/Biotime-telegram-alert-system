@@ -41,33 +41,33 @@ flowchart LR
 
 ```mermaid
    flowchart TD
-    A([Start monitor]) --> B[Load config: config/departments.json]
+    A([Start monitor]) --> B["Load config<br/>config/departments.json"]
     B --> C{Config found?}
-    C -- No --> C1[Log missing config<br/>Exit]
-    C -- Yes --> D[Load last_seen state (logs/last_seen.json)]
+    C -- No --> C1["Log missing config<br/>Exit"]
+    C -- Yes --> D["Load state<br/>logs/last_seen.json"]
 
     D --> E{CSV exists?}
-    E -- No --> E1[Log CSV not found<br/>Sleep poll interval] --> E
-    E -- Yes --> F[Read CSV (encoding fallback)]
+    E -- No --> E1["Log: CSV not found<br/>Sleep poll interval"] --> E
+    E -- Yes --> F["Read CSV<br/>(encoding fallback)"]
 
-    F --> G{First run? (no last_row_count)}
-    G -- Yes --> G1[Initialize state = current row_count<br/>(avoid spamming old rows)] --> H[Sleep poll interval] --> E
-    G -- No --> I{row_count decreased?}
-    I -- Yes --> I1[CSV reset/rotated<br/>Update state to new row_count] --> H --> E
+    F --> G{First run?}
+    G -- Yes --> G1["Init state = current row_count<br/>(avoid old spam)"] --> H["Sleep poll interval"] --> E
+    G -- No --> I{Row count decreased?}
+    I -- Yes --> I1["CSV reset/rotated<br/>Update state to new row_count"] --> H --> E
     I -- No --> J{New rows appended?}
     J -- No --> H --> E
-    J -- Yes --> K[Slice new rows (last_row_count → row_count)]
+    J -- Yes --> K["Slice new rows<br/>(last_row_count → row_count)"]
 
-    K --> L[For each new row: pick department]
+    K --> L["For each new row<br/>Pick department"]
     L --> M{Dept mapped?}
-    M -- No --> M1[Log unknown dept<br/>Skip row] --> L
+    M -- No --> M1["Log unknown dept<br/>Skip row"] --> L
     M -- Yes --> N{dry_run?}
-    N -- Yes --> N1[Log: Would notify dept<br/>Message preview] --> L
-    N -- No --> N2[Send Telegram] --> L
+    N -- Yes --> N1["Log: Would notify dept<br/>Message preview"] --> L
+    N -- No --> N2["Send Telegram"] --> L
 
-    L --> O[Update last_row_count = row_count]
-    O --> P[Write last_seen.json + logs]
-    P --> H --> E
+    L --> O["Update state<br/>last_row_count = row_count"]
+    O --> P["Write logs + state"] --> H --> E
+
 
 ```
 
