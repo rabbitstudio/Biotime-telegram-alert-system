@@ -41,23 +41,23 @@ flowchart LR
 
 ```mermaid
    flowchart TD
-  A([Start monitor]) --> B[Load config/departments.json]
-  B --> C{Config found?}
-  C -- No --> C1[Log error: Missing config\nShow example path\nExit]
-  C -- Yes --> D[Init logger + load last_seen state]
-  D --> E{CSV exists?}
-  E -- No --> E1[Log: CSV not found\nSleep poll_interval] --> E
-  E -- Yes --> F[Read CSV (encoding safe)]
-  F --> G{New rows?}
-  G -- No --> G1[Sleep poll_interval] --> E
+  A([Start monitor]) --> B[Load config departments.json]
+  B --> C{Config found}
+  C -- No --> C1[Log missing config<br/>Exit]
+  C -- Yes --> D[Init logger and load last_seen state]
+  D --> E{CSV exists}
+  E -- No --> E1[Log CSV not found<br/>Sleep poll interval] --> E
+  E -- Yes --> F[Read CSV safely]
+  F --> G{New rows}
+  G -- No --> G1[Sleep poll interval] --> E
   G -- Yes --> H[Parse new rows]
-  H --> I[For each row: read Dept field]
-  I --> J{Dept config exists?}
-  J -- No --> J1[Log: Unknown dept\nSkip row] --> I
-  J -- Yes --> K{dry_run = true?}
-  K -- Yes --> K1[Log: [DRY RUN] Would notify dept] --> L[Update last_seen state]
+  H --> I[For each row get Dept]
+  I --> J{Dept mapped}
+  J -- No --> J1[Log unknown dept<br/>Skip row] --> I
+  J -- Yes --> K{Dry run enabled}
+  K -- Yes --> K1[Log DRY RUN would notify dept] --> L[Update last_seen state]
   K -- No --> K2[Send Telegram message to dept chat] --> L
-  L --> M[Write last_seen.json + append logs]
+  L --> M[Write last_seen.json and logs]
   M --> G1
 ```
 
