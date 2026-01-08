@@ -1,5 +1,7 @@
+## Diagram #1 — Data Plane (Packet Flow: Site A → MPLS → Site B)
+
+```mermaid
 flowchart LR
-  %% ===== Nodes =====
   subgraph A["Site A (LAN)"]
     PC["Client/PC\n(Host A)"]
     CE_A["CE Router / FW\n(Default Gateway)"]
@@ -17,7 +19,6 @@ flowchart LR
     SV["Server\n(Host B)"]
   end
 
-  %% ===== Links =====
   PC -->|"1) IP packet to GW"| CE_A
   CE_A -->|"2) Lookup route → next-hop to MPLS"| PE_A
   PE_A -->|"3) Push MPLS label\n(enter L3VPN/VRF VPN1)"| P1
@@ -26,6 +27,5 @@ flowchart LR
   PE_B -->|"5) Pop label\n(exit VRF VPN1)"| CE_B
   CE_B -->|"6) Forward in LAN"| SV
 
-  %% Optional annotations
   CE_A -.->|"Access link 10/20 Mbps"| PE_A
   PE_B -.->|"Access link 10/20 Mbps"| CE_B
